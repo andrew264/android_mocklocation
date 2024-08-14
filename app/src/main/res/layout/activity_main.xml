@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/mapUrlInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/enter_google_maps_url"
+        android:inputType="textUri" />
+
+    <Button
+        android:id="@+id/extractButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/extract_coordinates" />
+
+    <EditText
+        android:id="@+id/latitudeInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/latitude"
+        android:inputType="numberDecimal" />
+
+    <EditText
+        android:id="@+id/longitudeInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/longitude"
+        android:inputType="numberDecimal" />
+
+    <EditText
+        android:id="@+id/altitudeInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/altitude"
+        android:inputType="numberDecimal" />
+
+    <EditText
+        android:id="@+id/refreshTimeInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/refresh_time_ms"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/startMockServiceButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start_mock_location_service" />
+
+    <Button
+        android:id="@+id/stopMockServiceButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/stop_mock_location_service" />
+
+</LinearLayout>
