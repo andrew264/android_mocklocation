@@ -6,6 +6,6 @@
     <string name="refresh_time_ms">Refresh Time (ms)</string>
     <string name="start_mock_location_service">Start Mock Location Service</string>
     <string name="stop_mock_location_service">Stop Service</string>
-    <string name="enter_google_maps_url">Enter Google Maps URL</string>
+    <string name="enter_google_maps_url">Enter Google Maps URL (or) Comma Separated Coordinates</string>
     <string name="extract_coordinates">Extract Coordinates</string>
 </resources>

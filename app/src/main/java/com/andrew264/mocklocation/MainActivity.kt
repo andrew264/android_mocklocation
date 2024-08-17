@@ -45,7 +45,8 @@ class MainActivity : AppCompatActivity() {
         startMockServiceButton.setOnClickListener { startMockLocationService() }
         stopMockServiceButton.setOnClickListener { stopMockLocationService() }
 
-        registerReceiver(mockLocationErrorReceiver,
+        registerReceiver(
+            mockLocationErrorReceiver,
             IntentFilter("com.andrew264.mocklocation.MOCK_LOCATION_ERROR"), RECEIVER_EXPORTED
         )
 
@@ -68,9 +69,6 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-        )
-        val bgPermissions = listOf(
-            Manifest.permission.FOREGROUND_SERVICE_LOCATION
         )
         val notificationPermissions = listOf(
             Manifest.permission.POST_NOTIFICATIONS
@@ -95,7 +93,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasPermissions(permissions: List<String>): Boolean {
         for (permission in permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    permission
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 return false
             }
         }
@@ -103,24 +105,54 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun extractCoordinates() {
-        val url = mapUrlInput.text.toString()
+        val url = mapUrlInput.text.toString().trim()
+
+        when {
+            url.startsWith("https://www.google.com/maps/place/") -> extractFromGoogleMapsUrl(url)
+            """-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?""".toRegex()
+                .containsMatchIn(url) -> extractFromCsvFormat(url)
+
+            else -> mapUrlInput.error = "Invalid URL or coordinate format"
+        }
+    }
+
+    private fun extractFromGoogleMapsUrl(url: String) {
         val regex = "@(-?\\d+\\.\\d+),(-?\\d+\\.\\d+),(-?\\d+\\.?\\d*)z?".toRegex()
         val matchResult = regex.find(url)
 
-        if (matchResult != null && matchResult.groupValues.size >= 3) {
-            latitudeInput.setText(matchResult.groupValues[1])
-            longitudeInput.setText(matchResult.groupValues[2])
-
-            if (matchResult.groupValues.size >= 4 && matchResult.groupValues[3].isNotEmpty()) {
-                altitudeInput.setText(matchResult.groupValues[3])
-            } else {
-                altitudeInput.setText("0.0")
-            }
-            Toast.makeText(this, "Coordinates extracted", Toast.LENGTH_SHORT).show()
+        if (matchResult != null) {
+            val (latitude, longitude, altitude) = matchResult.destructured
+            setCoordinates(latitude, longitude, altitude.takeIf { it.isNotEmpty() } ?: "0.0")
+            showSuccessToast()
         } else {
-            // Show an error message if coordinates couldn't be extracted
             mapUrlInput.error = "Invalid Google Maps URL"
         }
+    }
+
+    private fun extractFromCsvFormat(csv: String) {
+        try {
+            val coordinates = csv.split(",").map { it.trim() }
+            val latitude = coordinates[0]
+            val longitude = coordinates[1]
+            val altitude = coordinates.getOrNull(2)?.let {
+                it.split("z")[0].takeIf { it.isNotEmpty() }
+            } ?: "0.0"
+
+            setCoordinates(latitude, longitude, altitude)
+            showSuccessToast()
+        } catch (e: Exception) {
+            mapUrlInput.error = "Invalid CSV format"
+        }
+    }
+
+    private fun setCoordinates(latitude: String, longitude: String, altitude: String) {
+        latitudeInput.setText(latitude)
+        longitudeInput.setText(longitude)
+        altitudeInput.setText(altitude)
+    }
+
+    private fun showSuccessToast() {
+        Toast.makeText(this, "Coordinates extracted", Toast.LENGTH_SHORT).show()
     }
 
     private fun startMockLocationService() {
