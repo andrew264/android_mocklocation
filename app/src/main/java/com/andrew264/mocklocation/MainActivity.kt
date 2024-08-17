@@ -14,6 +14,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val REQUEST_CODE_LOCATION = 101
 private const val REQUEST_CODE_NOTIFICATION = 112
@@ -41,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         startMockServiceButton = findViewById(R.id.startMockServiceButton)
         stopMockServiceButton = findViewById(R.id.stopMockServiceButton)
 
-        extractButton.setOnClickListener { extractCoordinates() }
+        extractButton.setOnClickListener { CoroutineScope(Dispatchers.IO).launch { extractCoordinates() } }
         startMockServiceButton.setOnClickListener { startMockLocationService() }
         stopMockServiceButton.setOnClickListener { stopMockLocationService() }
 
@@ -104,51 +109,20 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun extractCoordinates() {
+    private suspend fun extractCoordinates() {
         val url = mapUrlInput.text.toString().trim()
 
-        when {
-            url.startsWith("https://www.google.com/maps/place/") -> extractFromGoogleMapsUrl(url)
-            """-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?""".toRegex()
-                .containsMatchIn(url) -> extractFromCsvFormat(url)
-
-            else -> mapUrlInput.error = "Invalid URL or coordinate format"
+        lifecycleScope.launch {
+            try {
+                val (latitude, longitude, altitude) = withContext(Dispatchers.IO) { extract(url) }
+                latitudeInput.setText(latitude)
+                longitudeInput.setText(longitude)
+                altitudeInput.setText(altitude)
+                showSuccessToast()
+            } catch (e: Exception) {
+                mapUrlInput.error = e.message
+            }
         }
-    }
-
-    private fun extractFromGoogleMapsUrl(url: String) {
-        val regex = "@(-?\\d+\\.\\d+),(-?\\d+\\.\\d+),(-?\\d+\\.?\\d*)z?".toRegex()
-        val matchResult = regex.find(url)
-
-        if (matchResult != null) {
-            val (latitude, longitude, altitude) = matchResult.destructured
-            setCoordinates(latitude, longitude, altitude.takeIf { it.isNotEmpty() } ?: "0.0")
-            showSuccessToast()
-        } else {
-            mapUrlInput.error = "Invalid Google Maps URL"
-        }
-    }
-
-    private fun extractFromCsvFormat(csv: String) {
-        try {
-            val coordinates = csv.split(",").map { it.trim() }
-            val latitude = coordinates[0]
-            val longitude = coordinates[1]
-            val altitude = coordinates.getOrNull(2)?.let {
-                it.split("z")[0].takeIf { it.isNotEmpty() }
-            } ?: "0.0"
-
-            setCoordinates(latitude, longitude, altitude)
-            showSuccessToast()
-        } catch (e: Exception) {
-            mapUrlInput.error = "Invalid CSV format"
-        }
-    }
-
-    private fun setCoordinates(latitude: String, longitude: String, altitude: String) {
-        latitudeInput.setText(latitude)
-        longitudeInput.setText(longitude)
-        altitudeInput.setText(altitude)
     }
 
     private fun showSuccessToast() {
